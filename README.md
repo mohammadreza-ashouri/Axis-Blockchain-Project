@@ -1,4 +1,5 @@
 # Axis-Blockchain-
 This repository  preservers the source code of the Axis blockchain
 + Update: Axis VM added + EVM opcodes support 
-- Next target: testing the VM module, adding the state machine
++ Updates Arithmatic Operands, Logical, and Cryptographic Operands to the virtual machine
+- Next target: Adding the state machine
