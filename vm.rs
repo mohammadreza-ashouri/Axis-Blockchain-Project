@@ -308,3 +308,357 @@ impl AXISVM {
 
 
 }
+
+
+
+/// 0x30: Operation related to execution environment Part 1
+impl AXISVM {
+    /// 0x30: address of the executing contract
+    fn op_address(&mut self) {
+        self.consume_gas(2);
+        self.push_assembly("ADDRESS");
+        let address = util::h160_to_u256(&self.env.code_supervisor);
+        self.push(address);
+    }
+
+    /// 0x31: Get balance of the given account.
+    fn op_balance(&mut self) {
+        self.consume_gas(400);
+        self.push_assembly("BALANCE");
+        let address = util::u256_to_h160(&self.pop());       
+        not_implement_panic();
+    }
+
+    fn op_origin(&mut self) {
+        self.push_assembly("ORIGIN");
+        not_implement_panic();
+    }
+
+    fn op_caller(&mut self) {
+        self.consume_gas(2);
+        self.push_assembly("CALLER");
+        self.push(util::h160_to_u256(&self.env.sender));
+    }
+
+    fn op_callvalue(&mut self) {
+        self.push_assembly("CALLVALUE");
+        not_implement_panic();
+    }
+
+ /// 0x35: Push the value popped from the stack as start and push 32 bytes of data from the start position of input to the position of start + 32 to the stack.
+    fn op_calldataload(&mut self) {
+        self.consume_gas(3);
+        self.push_assembly("CALLDATALOAD");
+        let start = self.pop().as_u32() as usize;
+        let bytes: [u8; 32] = util::slice_to_array(&self.env.input[start..]);
+        self.push(bytes.into());
+    }
+
+/// 0x36: Push the data size stored in input to stack
+    fn op_calldatasize(&mut self) {
+        self.consume_gas(2);
+        self.push_assembly("CALLDATASIZE");
+        let size = self.env.input.len();
+        self.push(size.into());
+    }
+
+    /// 0x37:
+    fn op_calldatacopy(&mut self) {
+        self.push_assembly("CALLDATACOPY");
+        not_implement_panic();
+    }
+
+    /// 0x38:
+    fn op_codesize(&mut self) {
+        self.push_assembly("CODESIZE");
+        not_implement_panic();
+    }
+
+   /// 0x39: Copy the code deployed to the contract
+    fn op_codecopy(&mut self) {
+        self.consume_gas(9); // ???
+        self.push_assembly("CODECOPY");
+        let dest_offset = self.pop().as_u32() as usize;
+        let offset = self.pop().as_u32() as usize;
+        let length = self.pop().as_u32() as usize;
+
+        for i in 0..length {
+            let b = self.env.code[offset + i];
+            self.memory.insert(dest_offset + i, b);
+        }
+    }
+
+    /// 0x3a:
+    fn op_gasprice(&mut self) {
+        self.push_assembly("GASPRICE");
+        not_implement_panic();
+    }
+
+    /// 0x3b:
+    fn op_extcodesize(&mut self) {
+        self.push_assembly("EXTCODESIZE");
+        not_implement_panic();
+    }
+
+    /// 0x3c:
+    fn op_extcodecopy(&mut self) {
+        self.push_assembly("EXTCODECOPY");
+        not_implement_panic();
+    }
+
+    /// 0x3d:
+    fn op_returndatasize(&mut self) {
+        self.push_assembly("RETURNDATASIZE");
+        not_implement_panic();
+    }
+
+    /// 0x3e:
+    fn op_returndatacopy(&mut self) {
+        self.push_assembly("RETURNDATACOPY");
+        not_implement_panic();
+    }
+
+    /// 0x3f:
+    fn op_extcodehash(&mut self) {
+        self.push_assembly("EXTCODEHASH");
+        not_implement_panic();
+    }
+}
+
+
+/// 0x10: Condition, bit operation
+impl AXISVM {
+    /// 0x10: operand1 < operand2
+    fn op_lt(&mut self) {
+        self.consume_gas(3);
+        self.push_assembly("LT");
+        let operand1 = self.pop();
+        let operand2 = self.pop();
+        if operand1 < operand2 {
+            self.push(U256::from(1));
+        } else {
+            self.push(U256::from(0));
+        }
+    }
+
+    /// 0x11: operand1 > operand2
+    fn op_gt(&mut self) {
+        self.consume_gas(3);
+        self.push_assembly("GT");
+        let operand1 = self.pop();
+        let operand2 = self.pop();
+        if operand1 > operand2 {
+            self.push(U256::from(1));
+        } else {
+            self.push(U256::from(0));
+        }
+    }
+
+    fn op_slt(&mut self) {
+        self.push_assembly("SLT");
+        not_implement_panic();
+    }
+
+    fn op_sgt(&mut self) {
+        self.push_assembly("SGT");
+        not_implement_panic();
+    }
+
+    /// 0x14: operand1 == operand2
+    fn op_eq(&mut self) {
+        self.consume_gas(3);
+        self.push_assembly("EQ");
+        let operand1 = self.pop();
+        let operand2 = self.pop();
+        if operand1 == operand2 {
+            self.push(U256::from(1));
+        } else {
+            self.push(U256::from(0));
+        }
+    }
+
+    /// 0x15: operand1 == 0
+    fn op_is_zero(&mut self) {
+        self.consume_gas(3);
+        self.push_assembly("ISZERO");
+        let operand1 = self.pop();
+        if operand1 == U256::from(0) {
+            self.push(U256::from(1));
+        } else {
+            self.push(U256::from(0));
+        }
+    }
+
+    /// AND: operand1 & operand2
+    fn op_and(&mut self) {
+        self.consume_gas(3);
+        self.push_assembly("AND");
+        let operand1 = self.pop();
+        let operand2 = self.pop();
+        let result = operand1 & operand2;
+        self.push(result);
+    }
+
+    /// OR operand1 | operand2
+    fn op_or(&mut self) {
+        self.consume_gas(3);
+        self.push_assembly("OR");
+        let operand1 = self.pop();
+        let operand2 = self.pop();
+        let result = operand1 | operand2;
+        self.push(result);
+    }
+
+    /// XOR: operand1 ^ operand2
+    fn op_xor(&mut self) {
+        self.consume_gas(3);
+        self.push_assembly("XOR");
+        let operand1 = self.pop();
+        let operand2 = self.pop();
+        let result = operand1 ^ operand2;
+        self.push(result);
+    }
+
+    /// NOT  ~operand1
+    fn op_not(&mut self) {
+        self.consume_gas(3);
+        self.push_assembly("NOT");
+        let operand1 = self.pop();
+        let result = !operand1;
+        self.push(result);
+    }
+
+    /// BYESHIFT 0x1a: operand2 の operand1
+    fn op_byte(&mut self) {
+        // y = (operand2 >> (248 - operand1 * 8)) & 0xFF
+        self.consume_gas(3);
+        self.push_assembly("BYTE");
+        let operand1 = self.pop();
+        let operand2 = self.pop();
+        let mask = U256::from(0xff);
+        let index = 248 - (operand1.as_u32() as usize) * 8;
+        let result = (operand2 >> index) & mask;
+        self.push(result);
+    }
+
+    fn op_shl(&mut self) {
+        self.push_assembly("SHL");
+        not_implement_panic();
+    }
+
+    fn op_shr(&mut self) {
+        self.push_assembly("SHR");
+        not_implement_panic();
+    }
+
+    fn op_sar(&mut self) {
+        self.push_assembly("SAR");
+        not_implement_panic();
+    }
+}
+
+/// 0x20: Cryptographic operation
+impl AXISVM {
+    fn op_sha3(&mut self) {
+        self.push_assembly("SHA3");
+        not_implement_panic();
+    }
+}
+
+
+
+
+
+
+
+
+// Arithmatic Operations
+
+impl AXISVM {
+    /// 0x00: nop
+    fn op_stop(&mut self) {
+        self.push_assembly("STOP");
+    }
+
+    ///0x01: add {operand1 (1st stack) + operand2 (2nd stack)}
+    fn op_add(&mut self) {
+        self.consume_gas(3);
+        self.push_assembly("ADD");
+        let operand1 = self.pop();
+        let operand2 = self.pop();
+        let result = operand1 + operand2;
+        self.push(result);
+    }
+
+    /// 0x02: MUL
+    fn op_mul(&mut self) {
+        self.consume_gas(5);
+        self.push_assembly("MUL");
+        let operand1 = self.pop();
+        let operand2 = self.pop();
+        let result = operand1 * operand2;
+        self.push(result);
+    }
+
+    /// 0x03: SUB
+    fn op_sub(&mut self) {
+        self.consume_gas(3);
+        self.push_assembly("SUB");
+        let operand1 = self.pop();
+        let operand2 = self.pop();
+        let result = operand1 - operand2;
+        self.push(result);
+    }
+
+    /// 0x04: DIV
+    fn op_div(&mut self) {
+        self.consume_gas(5);
+        self.push_assembly("DIV");
+        let operand1 = self.pop();
+        let operand2 = self.pop();
+        let result = operand1 / operand2;
+        self.push(result);
+    }
+
+    fn op_sdiv(&mut self) {
+        self.push_assembly("SDIV");
+        not_implement_panic();
+    }
+
+    fn op_mod(&mut self) {
+        self.push_assembly("MOD");
+        not_implement_panic();
+    }
+
+    fn op_smod(&mut self) {
+        self.push_assembly("SMOD");
+        not_implement_panic();
+    }
+
+    fn op_addmod(&mut self) {
+        self.push_assembly("ADDMOD");
+        not_implement_panic();
+    }
+
+    fn op_mulmod(&mut self) {
+        self.push_assembly("MULMOD");
+        not_implement_panic();
+    }
+
+    /// 0x0a: EXP
+    fn op_exp(&mut self) {
+        self.consume_gas(10);
+        self.push_assembly("EXP");
+        let operand1 = self.pop();
+        let operand2 = self.pop();
+        let result = operand1.pow(operand2);
+        self.push(result);
+    }
+
+    /// 0x0b:
+    fn op_sig_next_end(&mut self) {
+        self.push_assembly("SIGNEXTEND");
+        not_implement_panic();
+    }
+}
+
